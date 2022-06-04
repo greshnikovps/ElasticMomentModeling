@@ -10,7 +10,7 @@ public:
 	 * 
 	 * \param data 
 	 */
-	static void drowVectorPlot(const std::vector<Vector>& data);
+	static void drowVectorPlot(const std::vector<Vector>& data, const double& dt);
 
 	/**
 	 * Drows data plot.
@@ -24,6 +24,6 @@ public:
 	 * 
 	 * \param data
 	 */
-	static void drowEnergyPlot(const std::vector<Energy>& data);
+	static void drowEnergyPlot(const std::vector<Energy>& data, const double& dt);
 };
 

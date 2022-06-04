@@ -3,7 +3,18 @@
 #include "pbPlots.hpp"
 #include "supportLib.hpp"
 
-void GraphicDrawer::drowVectorPlot(const std::vector<Vector>& data)
+ScatterPlotSeries* setSeries(std::vector<double>& x, std::vector<double>& y, RGBA* color) {
+	ScatterPlotSeries* series = GetDefaultScatterPlotSeriesSettings();
+	series->xs = &x;
+	series->ys = &y;
+	series->linearInterpolation = true;
+	series->lineType = toVector(L"solid");
+	series->lineThickness = 2;
+	series->color = color;
+	return series;
+}
+
+void GraphicDrawer::drowVectorPlot(const std::vector<Vector>& data, const double& dt)
 {
 	RGBABitmapImageReference* imageReference = CreateRGBABitmapImageReference();
 	std::vector<double> magn(data.size());
@@ -11,11 +22,25 @@ void GraphicDrawer::drowVectorPlot(const std::vector<Vector>& data)
 
 	for (size_t i = 0; i < data.size(); i++) {
 		magn[i] = data[i].magnitude();
-		time[i] = i;
+		time[i] = i * dt;
 	}
 
 	StringReference errorMessage;
-	DrawScatterPlot(imageReference, 600, 400, &time, &magn, &errorMessage);
+
+	ScatterPlotSeries* coordSeries = setSeries(time, magn, CreateRGBColor(1, 0, 0));
+
+	ScatterPlotSettings* settings = GetDefaultScatterPlotSettings();
+	settings->width = 600;
+	settings->height = 400;
+	settings->autoBoundaries = true;
+	settings->autoPadding = true;
+	settings->title = toVector(L"");
+	settings->xLabel = toVector(L"t");
+	settings->yLabel = toVector(L"");
+
+	settings->scatterPlotSeries->push_back(coordSeries);
+
+	DrawScatterPlotFromSettings(imageReference, settings, &errorMessage);
 
 	std::vector<double>* pngdata = ConvertToPNG(imageReference->image);
 	WriteToFile(pngdata, "coords.png");
@@ -28,18 +53,9 @@ void GraphicDrawer::drowScalarPlot(const std::vector<double>& data)
 	std::cout << "drowScalarPlot" << data.size() << std::endl;
 }
 
-ScatterPlotSeries* setSeries(std::vector<double>& x, std::vector<double>& y, RGBA* color) {
-	ScatterPlotSeries* series = GetDefaultScatterPlotSeriesSettings();
-	series->xs = &x;
-	series->ys = &y;
-	series->linearInterpolation = true;
-	series->lineType = toVector(L"solid");
-	series->lineThickness = 2;
-	series->color = color;
-	return series;
-}
 
-void GraphicDrawer::drowEnergyPlot(const std::vector<Energy>& data)
+
+void GraphicDrawer::drowEnergyPlot(const std::vector<Energy>& data, const double& dt)
 {
 	std::vector<double> kinetic(data.size());
 	std::vector<double> potential(data.size());
@@ -50,7 +66,7 @@ void GraphicDrawer::drowEnergyPlot(const std::vector<Energy>& data)
 		kinetic[i] = data[i].kinetic;
 		potential[i] = data[i].potential;
 		total[i] = data[i].total;
-		time[i] = i;
+		time[i] = i * dt;
 	}
 
 	StringReference* errorMessage = new StringReference();
@@ -63,13 +79,13 @@ void GraphicDrawer::drowEnergyPlot(const std::vector<Energy>& data)
 	ScatterPlotSeries* potentialSeries = setSeries(time, potential, CreateRGBColor(0, 0, 1));
 
 	ScatterPlotSettings* settings = GetDefaultScatterPlotSettings();
-	settings->width = 2400;
-	settings->height = 1600;
+	settings->width = 800;
+	settings->height = 600;
 	settings->autoBoundaries = true;
 	settings->autoPadding = true;
-	settings->title = toVector(L"x^2 - 2");
-	settings->xLabel = toVector(L"X axis");
-	settings->yLabel = toVector(L"Y axis");
+	settings->title = toVector(L"Energy of the system");
+	settings->xLabel = toVector(L"t");
+	settings->yLabel = toVector(L"Energy");
 
 	settings->scatterPlotSeries->push_back(totalSeries);
 	settings->scatterPlotSeries->push_back(kineticSeries);
